@@ -26,20 +26,29 @@ export function Layers() {
         );
     }
 
-    function renderRow(ids: string[], depth: number): React.ReactNode {
+    function renderRow(
+        ids: string[],
+        depth: number,
+        path = new Set<string>()
+    ): React.ReactNode {
         if (ids.length === 0) return null;
 
         const used = new Set<string>();
         const groups: string[][] = [];
 
         ids.forEach((id) => {
-            if (used.has(id)) return;
+            if (path.has(id) || used.has(id)) return;
+
             used.add(id);
             const group = [id];
 
             ids.forEach((otherId) => {
-                if (used.has(otherId)) return;
-                const shares = nodes[id]?.children?.some((c) => nodes[otherId]?.children?.includes(c));
+                if (path.has(otherId) || used.has(otherId)) return;
+
+                const shares = nodes[id]?.children?.some((c) =>
+                    nodes[otherId]?.children?.includes(c)
+                );
+
                 if (shares) {
                     group.push(otherId);
                     used.add(otherId);
@@ -50,7 +59,12 @@ export function Layers() {
         });
 
         return groups.map((group) => {
-            const childIds = Array.from(new Set(group.flatMap((id) => nodes[id]?.children ?? [])));
+            const childIds = Array.from(
+                new Set(group.flatMap((id) => nodes[id]?.children ?? []))
+            ).filter((id) => !path.has(id));
+
+            const nextPath = new Set(path);
+            group.forEach((id) => nextPath.add(id));
 
             return (
                 <div key={group.join("-")}>
@@ -61,7 +75,7 @@ export function Layers() {
                         {group.map((id) => renderNode(id))}
                     </div>
 
-                    {renderRow(childIds, depth + 1)}
+                    {renderRow(childIds, depth + 1, nextPath)}
                 </div>
             );
         });
