@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNodeStore } from "./store";
 
 export function Layers() {
@@ -5,6 +6,53 @@ export function Layers() {
     const rootId = useNodeStore((s) => s.rootId);
     const currentId = useNodeStore((s) => s.currentId);
     const setCurrent = useNodeStore((s) => s.setCurrent);
+
+    const levels = useMemo(() => {
+        const depth: Record<string, number> = {};
+        const order: string[] = [];
+        const visiting = new Set<string>();
+
+        function visit(id: string, d: number) {
+            if (!nodes[id] || visiting.has(id)) return;
+            if (depth[id] !== undefined && depth[id] >= d) return;
+            if (depth[id] === undefined) order.push(id);
+
+            depth[id] = d;
+            visiting.add(id);
+            nodes[id].children?.forEach((c) => visit(c, d + 1));
+            visiting.delete(id);
+        }
+
+        nodes[rootId]?.children?.forEach((c) => visit(c, 0));
+
+        const byDepth: string[][] = [];
+        order.forEach((id) => {
+            (byDepth[depth[id]] ??= []).push(id);
+        });
+
+        return byDepth.map((ids) => {
+            const parent: Record<string, string> = {};
+            const find = (x: string): string =>
+                parent[x] === x ? x : (parent[x] = find(parent[x]));
+            ids.forEach((id) => (parent[id] = id));
+
+            for (let i = 0; i < ids.length; i++) {
+                for (let j = i + 1; j < ids.length; j++) {
+                    const shares = nodes[ids[i]].children?.some((c) =>
+                        nodes[ids[j]].children?.includes(c)
+                    );
+                    if (shares) parent[find(ids[i])] = find(ids[j]);
+                }
+            }
+
+            const groups = new Map<string, string[]>();
+            ids.forEach((id) => {
+                const r = find(id);
+                groups.set(r, [...(groups.get(r) ?? []), id]);
+            });
+            return Array.from(groups.values());
+        });
+    }, [nodes, rootId]);
 
     function renderNode(id: string) {
         const node = nodes[id];
@@ -14,78 +62,32 @@ export function Layers() {
             <button
                 key={id}
                 onClick={() => setCurrent(id)}
-                className={`key-cap scale-40 -m-1.5
-                    ${node.style}
-                    ${node?.meta?.color ? `bg-${node.meta.color}-400!` : ""}
-                    ${node?.meta?.color ? `text-${node.meta.color}-900!` : ""}
-                    hover:brightness-125 transition-all
-                    -mt-4
-                    ${currentId === id ? "ring-1 ring-white ring-offset-1 ring-offset-neutral-900" : ""}`}
-            >
-            </button>
+                style={{ zoom: 0.4 }}
+                className={`key-cap shrink-0
+                ${node.style}
+                ${node?.meta?.color ? `bg-${node.meta.color}-400!` : ""}
+                ${node?.meta?.color ? `text-${node.meta.color}-900!` : ""}
+                hover:brightness-125 transition-all
+                ${currentId === id ? "ring-1 ring-white ring-offset-1 ring-offset-neutral-900" : ""}`}
+            />
         );
     }
 
-    function renderRow(
-        ids: string[],
-        depth: number,
-        path = new Set<string>()
-    ): React.ReactNode {
-        if (ids.length === 0) return null;
-
-        const used = new Set<string>();
-        const groups: string[][] = [];
-
-        ids.forEach((id) => {
-            if (path.has(id) || used.has(id)) return;
-
-            used.add(id);
-            const group = [id];
-
-            ids.forEach((otherId) => {
-                if (path.has(otherId) || used.has(otherId)) return;
-
-                const shares = nodes[id]?.children?.some((c) =>
-                    nodes[otherId]?.children?.includes(c)
-                );
-
-                if (shares) {
-                    group.push(otherId);
-                    used.add(otherId);
-                }
-            });
-
-            groups.push(group);
-        });
-
-        return groups.map((group) => {
-            const childIds = Array.from(
-                new Set(group.flatMap((id) => nodes[id]?.children ?? []))
-            ).filter((id) => !path.has(id));
-
-            const nextPath = new Set(path);
-            group.forEach((id) => nextPath.add(id));
-
-            return (
-                <div key={group.join("-")}>
-                    <div
-                        className="flex items-center justify-end gap-0 py-0.5"
-                        style={{ paddingRight: 12 + depth * 16 }}
-                    >
-                        {group.map((id) => renderNode(id))}
-                    </div>
-
-                    {renderRow(childIds, depth + 1, nextPath)}
-                </div>
-            );
-        });
-    }
-
-    const root = nodes[rootId];
-
     return (
-        <div className="absolute top-4 right-2 flex flex-col w-64 h-fit pt-4 overflow-y-auto">
-            {renderRow(root?.children ?? [], 0)}
+        <div className="absolute top-6 right-2 flex flex-col w-64 h-fit">
+            {levels.map((groups, depth) => (
+                <div
+                    key={depth}
+                    className="flex items-center justify-end gap-2 py-0.5"
+                    style={{ paddingRight: 12 + depth * 16 }}
+                >
+                    {groups.map((group) => (
+                        <div key={group.join("-")} className="flex items-center gap-0">
+                            {group.map(renderNode)}
+                        </div>
+                    ))}
+                </div>
+            ))}
         </div>
     );
 }

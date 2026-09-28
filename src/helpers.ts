@@ -3,8 +3,12 @@ import { useNodeStore } from "./store";
 export function move(dx: number, dy: number) {
     useNodeStore.setState((state) => {
         const ids = new Set<string>();
-        
+        const visited = new Set<string>();
+
         const collect = (nodeId: string) => {
+            if (visited.has(nodeId)) return;
+            visited.add(nodeId);
+
             ids.add(nodeId);
             state.nodes[nodeId]?.children?.forEach(collect);
         };
@@ -54,15 +58,4 @@ export function setColor(color?:string) {
             },
         };
     })
-}
-
-export function cycleSibling(direction: 1 | -1) {
-    const { currentId, findNode, setCurrent } = useNodeStore.getState();
-    const current = findNode(currentId);
-    const parentId = current?.parents?.[0];
-    if (!parentId) return;
-    const siblings = findNode(parentId)?.children;
-    if (!siblings) return;
-    const index = siblings.indexOf(currentId);
-    setCurrent(siblings[(index + direction + siblings.length) % siblings.length]);
 }

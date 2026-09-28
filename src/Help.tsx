@@ -15,6 +15,13 @@ export function Help() {
                     <p className="text-xs text-neutral-500">{entry.name}</p>
                 </div>
             ))}
+
+            <div key={Object.keys(bindings).length} className="flex gap-2 items-center">
+                    <div className={`key-cap`}>
+                        {labelFor("escape")}
+                    </div>
+                    <p className="text-xs text-neutral-500">Cancel</p>
+                </div>
         </div>
     );
 }

@@ -1,13 +1,44 @@
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
-import type { Node } from "./types";
+import { GraphLayout, type Node, type Rect } from "./types";
 import { NodeComponent } from "./NodeComponent";
 import type { ElkNode } from "elkjs";
 import ElkConstructor from "elkjs";
 import { useNodeStore } from "./store";
-
-type Rect = { x: number; y: number; width: number; height: number };
+import { rectsMap } from "./navigation";
+import { encode, decode } from "./serialization";
 
 const elk = new ElkConstructor();
+
+export const getLayoutOptions = () => {
+    const layout = useNodeStore.getState().layout;
+
+    return {
+        "elk.algorithm": "layered",
+        "elk.direction": layout & GraphLayout.DDown ? "DOWN" : "RIGHT",
+        "elk.spacing.nodeNode": "100",
+        "elk.layered.spacing.nodeNodeBetweenLayers": "100",
+        "elk.edgeRouting": "ORTHOGONAL",
+        "elk.layered.nodePlacement.strategy":
+            layout & GraphLayout.Network_Simplex
+                ? "NETWORK_SIMPLEX"
+                : layout & GraphLayout.Linear_Segments
+                    ? "LINEAR_SEGMENTS"
+                    : "BRANDES_KOEPF",
+        "elk.layered.nodePlacement.bk.fixedAlignment":
+            layout & GraphLayout.Left
+                ? "LEFTUP"
+                : layout & GraphLayout.Right
+                    ? "RIGHTDOWN"
+                    : layout & GraphLayout.Down
+                        ? "DOWN"
+                        : layout & GraphLayout.Up
+                            ? "UP"
+                            : "BALANCED",
+        "elk.padding": "[top=40,left=40,bottom=40,right=40]",
+        "elk.layered.crossingMinimization.semiInteractive": "true",
+        "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES"
+    };
+};
 
 export async function layoutNodes(rootId: string): Promise<{ nodes: Node[]; graph: ElkNode }> {
     const { findNode } = useNodeStore.getState();
@@ -37,17 +68,7 @@ export async function layoutNodes(rootId: string): Promise<{ nodes: Node[]; grap
 
     const graph = await elk.layout({
         id: "root",
-        layoutOptions: {
-            "elk.algorithm": "layered",
-            "elk.direction": "RIGHT",
-            "elk.spacing.nodeNode": "100",
-            "elk.layered.spacing.nodeNodeBetweenLayers": "100",
-            "elk.edgeRouting": "ORTHOGONAL",
-            "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
-            "elk.padding": "[top=40,left=40,bottom=40,right=40]",
-            "elk.layered.crossingMinimization.semiInteractive": "true",
-            "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES"
-        },
+        layoutOptions: getLayoutOptions(),
         children: nodes.map((_, i) => ({
             id: String(i),
             width: 100,
@@ -112,12 +133,41 @@ export function Tree() {
     const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
     const nodes = useNodeStore((state) => state.nodes);
     const root = useNodeStore((state) => state.rootId);
+    const loadGraph = useNodeStore((state) => state.loadGraph);
+    const graphLayoutFlags = useNodeStore((state) => state.layout);
+
+    const initialized = useRef(false);
 
     useEffect(() => {
+        if (!initialized.current) {
+            initialized.current = true;
+
+            const url = new URL(window.location.href);
+            const encoded = url.searchParams.get("graph");
+
+            if (encoded) {
+                const deserialized = decode(encoded);
+
+                loadGraph(deserialized);
+
+                console.log(`Loaded fastgraph with ${deserialized.nodes.length} nodes.`);
+            }
+
+            return;
+        }
+
         layoutNodes(root).then(setLayout);
-    }, [root, nodes]);
+
+        const url = new URL(window.location.href);
+        url.searchParams.set("graph", encode(root, Object.values(nodes)));
+
+        history.replaceState(null, "", url);
+
+        console.log(nodes)
+    }, [root, nodes, graphLayoutFlags]);
 
     useLayoutEffect(() => {
+
         if (!layout) return;
 
         const measure = () => {
@@ -131,6 +181,12 @@ export function Tree() {
                 });
             });
             setNodeRects(next);
+
+            rectsMap.clear();
+            next.forEach((rect, i) => {
+                const id = layout.nodes[i]?.id;
+                if (id) rectsMap.set(id, rect);
+            });
         };
 
         measure();
@@ -138,7 +194,10 @@ export function Tree() {
         const observer = new ResizeObserver(measure);
         nodeRefs.current.forEach((el) => observer.observe(el));
 
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+            rectsMap.clear()
+        }
     }, [layout, nodes]);
 
     if (!layout) return null;

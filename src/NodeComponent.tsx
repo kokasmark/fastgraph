@@ -1,4 +1,3 @@
-import { labelFor } from "./KeyBar";
 import { useNodeStore } from "./store";
 import { GraphState } from "./types";
 import type { Node } from "./types";
@@ -14,29 +13,13 @@ function cursorForState(state: GraphState): string {
 
 export function NodeComponent({ node, hideCursor }: { node: Node, hideCursor?: boolean }) {
     const currentId = useNodeStore((s) => s.currentId);
-    const findNode = useNodeStore((s) => s.findNode);
-    const current = findNode(currentId)
     const isCurrent = currentId === node.id;
     const appState = useNodeStore((s) => s.state);
 
     const cursor = cursorForState(appState);
 
-    const isParentToCurrent = current?.parents?.includes(node.id)
-    const isChildToCurrent = current?.children?.includes(node.id)
-    const isSiblingToCurrent = currentId !== node.id && !!node.parents?.some((p) => current?.parents?.includes(p))
-
-    const getRelationalKey = () => {
-        if (!isParentToCurrent && !isChildToCurrent && !isSiblingToCurrent) return undefined;
-
-        if (isParentToCurrent)
-            return ["arrowleft"]
-        else if (isChildToCurrent)
-            return ["arrowright"]
-        else if (isSiblingToCurrent)
-            return ["arrowup", "arrowdown"]
-    }
-
-    const relationKey = getRelationalKey()
+    const w = node.meta?.size?.x;
+    const h = node.meta?.size?.y;
 
     return (
         <div
@@ -67,14 +50,6 @@ export function NodeComponent({ node, hideCursor }: { node: Node, hideCursor?: b
                     }}
                 />
             )}
-
-            {relationKey &&
-                <div className="flex items-center absolute -top-10">
-                    {relationKey.map(key => (
-                        <div key={node.id+key} className="key-cap scale-60">{labelFor(key)}</div>
-                    ))}
-                </div>
-            }
         </div>
     );
 }

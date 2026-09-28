@@ -8,6 +8,7 @@ const keyLabels: Record<string, string> = {
     arrowdown: "↓",
     enter: "⏎",
     shift: "⇧",
+    escape: "↩",
     " ": "␣",
 };
 

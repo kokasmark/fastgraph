@@ -1,7 +1,8 @@
 import { useNodeStore } from "./store";
-import { GraphState, type Node } from "./types";
+import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState, type Node } from "./types";
 import { BoxNode, CircleNode, DatabaseNode, RombusNode, } from "./nodes";
-import { cycleSibling, move, scale, setColor } from "./helpers";
+import { move, scale, setColor } from "./helpers";
+import { navigate } from "./navigation";
 
 type Action = () => void;
 
@@ -13,6 +14,18 @@ type Bindings = {
 };
 
 const baseBindings: Bindings = {
+    n: {
+        name: "New Graph",
+        children: {
+            n: {
+                name: "Create",
+                children: () => {
+                    const root = crypto.randomUUID()
+                    useNodeStore.getState().loadGraph({root, nodes: [ {id: root} ]})
+                }
+            }
+        }
+    },
     a: {
         name: "Add",
         children: {
@@ -149,25 +162,10 @@ const baseBindings: Bindings = {
             }));
         },
     },
-    arrowup: { name: "Previous", children: () => cycleSibling(1) },
-    arrowdown: { name: "Next", children: () => cycleSibling(-1) },
-    arrowleft: {
-        name: "Parent",
-        children: () => {
-            const { currentId, findNode, setCurrent, rootId } = useNodeStore.getState();
-            const current = findNode(currentId);
-            const parentId = current?.parents?.[0];
-            if (parentId !== undefined && parentId !== rootId) setCurrent(parentId);
-        },
-    },
-    arrowright: {
-        name: "Child",
-        children: () => {
-            const { currentId, findNode, setCurrent } = useNodeStore.getState();
-            const current = findNode(currentId);
-            if (current?.children?.[0]) setCurrent(current.children[0]);
-        },
-    },
+    arrowup: { name: "Up", children: () => navigate("up") },
+    arrowdown: { name: "Down", children: () => navigate("down") },
+    arrowleft: { name: "Left", children: () => navigate("left") },
+    arrowright: { name: "Right", children: () => navigate("right") },
     c: {
         name: "Color",
         children: {
@@ -207,26 +205,61 @@ const baseBindings: Bindings = {
             }
         },
     },
-    o: {
-        name: "Order",
-        children: () => {
-            const { nodes } = useNodeStore.getState();
-
-            const updates: Record<string, Node> = {};
-            Object.values(nodes).forEach((node) => {
-                if (!node.meta?.offset) return;
-                updates[node.id] = {
-                    ...node,
-                    meta: { ...node.meta, offset: undefined },
-                };
-            });
-
-            if (Object.keys(updates).length === 0) return;
-
-            useNodeStore.setState((state) => ({
-                nodes: { ...state.nodes, ...updates },
-            }));
-        },
+    l: {
+        name: "Layout",
+        children: {
+            d: {
+                name: "Direction",
+                children: {
+                    arrowright: {
+                        name: "Right",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.DRight, GraphLayoutDirection)
+                    },
+                    arrowdown: {
+                        name: "Down",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.DDown, GraphLayoutDirection)
+                    }
+                }
+            },
+            a: {
+                name: "Aligment",
+                children: {
+                    arrowup: {
+                        name: "Up",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Up, GraphLayoutAlignment)
+                    },
+                    arrowdown: {
+                        name: "Down",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Down, GraphLayoutAlignment)
+                    },
+                    arrowleft: {
+                        name: "Left",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Left, GraphLayoutAlignment)
+                    },
+                    arrowright: {
+                        name: "Right",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Right, GraphLayoutAlignment)
+                    }
+                }
+            },
+            s: {
+                name: "Strategy",
+                children: {
+                    b: {
+                        name: "Brandes Koepf",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Brandes_Koepf, GraphLayoutStrategy)
+                    },
+                    n: {
+                        name: "Network Simplex",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Network_Simplex, GraphLayoutStrategy)
+                    },
+                    l: {
+                        name: "Linear Segments",
+                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Linear_Segments, GraphLayoutStrategy)
+                    }
+                }
+            }
+        }
     },
     z: {
         name: "Undo",
@@ -234,7 +267,7 @@ const baseBindings: Bindings = {
             const { undo } = useNodeStore.getState();
             undo()
         }
-    }
+    },
 };
 
 const grabbedBindings: Bindings = {
@@ -243,19 +276,19 @@ const grabbedBindings: Bindings = {
         children: () => useNodeStore.getState().setState(GraphState.None),
     },
     arrowup: {
-        name: "Move",
+        name: "Up",
         children: () => move(0, -20),
     },
     arrowdown: {
-        name: "Move",
+        name: "Down",
         children: () => move(0, 20),
     },
     arrowleft: {
-        name: "Move",
+        name: "Left",
         children: () => move(-20, 0),
     },
     arrowright: {
-        name: "Move",
+        name: "Right",
         children: () => move(20, 0),
     },
 };
@@ -474,7 +507,9 @@ const stateBindings: Partial<Record<GraphState, Bindings>> = {
 
 export function resolveActiveBindings(): Bindings {
     const state = useNodeStore.getState().state;
-    return stateBindings[state] ?? baseBindings;
+    const bindings = stateBindings[state] ?? baseBindings;
+
+    return bindings;
 }
 
 export type KeyStatus = "pending" | "success" | "fail";
@@ -491,7 +526,7 @@ export function createKeyResolver(
 
         if (key === "Escape" && !entry) {
             chord = null;
-            useNodeStore.getState().setActiveBindings(modeRoot);
+            useNodeStore.getState().setActiveBindings(baseBindings);
             useNodeStore.getState().setState(GraphState.None);
             onKey(undefined, undefined, "fail");
             return;

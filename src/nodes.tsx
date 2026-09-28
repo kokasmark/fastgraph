@@ -1,21 +1,21 @@
-import type { Node } from "./types";
+import { styles, type Node } from "./types";
 
 export const BoxNode: Node = {
     id: "",
-    style: "rounded-md!",
+    style: styles[1],
 };
 
 export const CircleNode: Node = {
     id: "",
-    style: "rounded-full! aspect-square!",
+    style: styles[2],
 };
 
 export const RombusNode: Node = {
     id: "",
-    style: "rotate-45! rounded-md! aspect-square!",
+    style: styles[3],
 };
 
 export const DatabaseNode: Node = {
     id: "",
-    style: "rounded-[50%_/_20%]!",
+    style: styles[4],
 };

@@ -1,9 +1,6 @@
 import { create } from "zustand";
-import type { Bindings, Node } from "./types";
-import { GraphState } from "./types";
-
-type StoreChange<S> = { key: keyof S; before: S[keyof S] };
-type Transaction<S> = StoreChange<S>[];
+import type { Node, NodeStore, Transaction } from "./types";
+import { GraphLayout, GraphState, styles } from "./types";
 
 function diffState<S extends object>(before: S, after: S, ignoreKeys: Set<keyof S>): Transaction<S> {
     const changes: Transaction<S> = [];
@@ -20,32 +17,12 @@ function diffState<S extends object>(before: S, after: S, ignoreKeys: Set<keyof 
     return changes;
 }
 
-type NodeStore = {
-    nodes: Record<string, Node>;
-    rootId: string;
-    currentId: string;
-    yankedId?: string;
-    state: GraphState;
-    activeBindings: Bindings | null;
-    undoStack: Transaction<NodeStore>[];
-    setActiveBindings: (bindings: Bindings | null) => void;
-    findNode: (id: string) => Node | undefined;
-    setState: (state: GraphState) => void;
-    updateNode: (id: string, updater: (node: Node) => Node) => void;
-    addNode: (parentId: string, child: Node) => string | undefined;
-    setCurrent: (nodeId: string) => void;
-    setYanked: (nodeId?: string) => void;
-    removeNode: (nodeId: string) => void;
-    undo: () => void;
-};
-
-
 const rootId = crypto.randomUUID();
 
 const rootNode: Node = {
     id: rootId,
     children: [],
-    style: "hidden"
+    style: styles[0]
 };
 
 const UNTRACKED_KEYS = new Set<keyof NodeStore>(["undoStack"]);
@@ -71,8 +48,26 @@ export const useNodeStore = create<NodeStore>((set, get) => {
         currentId: rootId,
         yankedId: undefined,
         state: GraphState.None,
+        layout: GraphLayout.Right | GraphLayout.Balanced | GraphLayout.Brandes_Koepf,
         activeBindings: null,
         undoStack: [],
+
+        loadGraph: (graph) => {
+            const nodes = Object.fromEntries(graph.nodes.map(node => [node.id, node]))
+
+            if (!nodes[graph.root]) {
+                console.error("Cannot load graph: root node does not exist.");
+                return;
+            }
+
+            trackedSet((state) => ({
+                ...state,
+                nodes,
+                rootId: graph.root,
+                currentId: graph.root,
+                yankedId: undefined,
+            }));
+        },
 
         findNode: (id) => get().nodes[id],
 
@@ -90,6 +85,13 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                     },
                 };
             });
+        },
+
+        setLayoutFlag: (flag, category) => {
+            trackedSet((s) => ({
+                ...s,
+                layout: (s.layout & ~category) | flag
+            }));
         },
 
         addNode: (parentId, child) => {
