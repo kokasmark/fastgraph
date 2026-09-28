@@ -1,5 +1,5 @@
 import { useNodeStore } from "./store";
-import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState, type Node } from "./types";
+import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState } from "./types";
 import { BoxNode, CircleNode, DatabaseNode, RombusNode, } from "./nodes";
 import { move, scale, setColor } from "./helpers";
 import { navigate } from "./navigation";

@@ -24,10 +24,8 @@ export function NodeComponent({ node, hideCursor }: { node: Node, hideCursor?: b
     return (
         <div
             style={{
-                paddingLeft: `${16 + (node.meta?.size?.x ?? 0)}px`,
-                paddingRight: `${16 + (node.meta?.size?.x ?? 0)}px`,
-                paddingTop: `${16 + (node.meta?.size?.y ?? 0)}px`,
-                paddingBottom: `${16 + (node.meta?.size?.y ?? 0)}px`,
+                ...(w !== undefined && { width: w, minWidth: 32, maxWidth: w }),
+                ...(h !== undefined && { height: h, minHeight: 32, maxHeight: h }),
             }}
             className={`relative flex w-fit items-center justify-center text-center min-w-16 min-h-16 max-w-64 bg-neutral-800 text-neutral-400
                 ${node.style}
