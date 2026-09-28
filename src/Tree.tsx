@@ -143,7 +143,7 @@ export function Tree() {
             initialized.current = true;
 
             const url = new URL(window.location.href);
-            const encoded = url.searchParams.get("graph");
+            const encoded = url.searchParams.get("g");
 
             if (encoded) {
                 const deserialized = decode(encoded);
@@ -159,7 +159,7 @@ export function Tree() {
         layoutNodes(root).then(setLayout);
 
         const url = new URL(window.location.href);
-        url.searchParams.set("graph", encode(root, Object.values(nodes)));
+        url.searchParams.set("g", encode(root, Object.values(nodes)));
 
         history.replaceState(null, "", url);
 
