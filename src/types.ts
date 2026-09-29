@@ -76,9 +76,10 @@ export type SerializedNode = {
     m?: NodeMeta;
 };
 
+export type Tuple = [number?, number[]?, NodeMeta?];
+
 export type SerializedGraph = {
     n: SerializedNode[];
-    r: number;
 };
 
 export type DeserializedGraph = {

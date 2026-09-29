@@ -138,6 +138,21 @@ export function Tree() {
 
     const initialized = useRef(false);
 
+    const dec = async(encoded: string) => {
+        const deserialized = await decode(encoded);
+
+        loadGraph(deserialized);
+
+        console.log(`Loaded fastgraph with ${deserialized.nodes.length} nodes.`);
+    }
+
+    const enc = async() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("g", await encode(Object.values(nodes)));
+
+        history.replaceState(null, "", url);
+    }
+
     useEffect(() => {
         if (!initialized.current) {
             initialized.current = true;
@@ -146,24 +161,15 @@ export function Tree() {
             const encoded = url.searchParams.get("g");
 
             if (encoded) {
-                const deserialized = decode(encoded);
-
-                loadGraph(deserialized);
-
-                console.log(`Loaded fastgraph with ${deserialized.nodes.length} nodes.`);
+                dec(encoded)
             }
-
+            
             return;
         }
 
         layoutNodes(root).then(setLayout);
 
-        const url = new URL(window.location.href);
-        url.searchParams.set("g", encode(root, Object.values(nodes)));
-
-        history.replaceState(null, "", url);
-
-        console.log(nodes)
+        enc()
     }, [root, nodes, graphLayoutFlags]);
 
     useLayoutEffect(() => {
