@@ -61,14 +61,6 @@ export type Node = {
     meta?: NodeMeta;
 }
 
-export const styles = [
-    "hidden",
-    "rounded-md!",
-    "rounded-full! aspect-square!",
-    "rotate-45! rounded-md! aspect-square!",
-    "rounded-[50%_/_20%]!"
-]
-
 export type SerializedNode = {
     s?: number;
     p?: number[];

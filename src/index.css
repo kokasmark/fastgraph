@@ -16,6 +16,12 @@
          animate-[pop-in_0.18s_ease-out]
 }
 
+@utility shape-cloud {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60' preserveAspectRatio='none'%3E%3Cpath d='M25 55C10 55 2 45 6 33C8 24 16 20 22 22C22 10 34 3 46 8C54 -1 72 3 74 16C86 12 98 22 94 36C98 48 88 55 76 55Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60' preserveAspectRatio='none'%3E%3Cpath d='M25 55C10 55 2 45 6 33C8 24 16 20 22 22C22 10 34 3 46 8C54 -1 72 3 74 16C86 12 98 22 94 36C98 48 88 55 76 55Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;

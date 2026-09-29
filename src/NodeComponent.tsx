@@ -12,42 +12,51 @@ function cursorForState(state: GraphState): string {
 
 
 export function NodeComponent({ node, hideCursor }: { node: Node, hideCursor?: boolean }) {
-    const currentId = useNodeStore((s) => s.currentId);
-    const isCurrent = currentId === node.id;
+    const { currentId, rootId } = useNodeStore();
+    const isCurrent = currentId === node.id && rootId !== node.id;
     const appState = useNodeStore((s) => s.state);
 
     const cursor = cursorForState(appState);
 
-    const w = node.meta?.size?.x;
-    const h = node.meta?.size?.y;
+    const width = node.meta?.size?.x;
+    const height = node.meta?.size?.y;
 
     return (
-        <div
+       <div
             style={{
-                ...(w !== undefined && { width: w, minWidth: 32, maxWidth: w }),
-                ...(h !== undefined && { height: h, minHeight: 32, maxHeight: h }),
+                minWidth: 64,
+                minHeight: 65,
+                ...(width !== undefined && { width, maxWidth: width }),
+                ...(height !== undefined && { height, maxHeight: height }),
             }}
-            className={`relative flex w-fit items-center justify-center text-center min-w-16 min-h-16 max-w-64 bg-neutral-800 text-neutral-400
+            className="relative grid w-fit max-w-64"
+        >
+
+        <div
+            className={`flex items-center justify-center text-center p-1 bg-neutral-800 text-neutral-400
                 ${node.style}
                 ${node?.meta?.color ? `bg-${node.meta.color}-400!` : ""}
                 ${node?.meta?.color ? `text-${node.meta.color}-900!` : ""}
             `}
         >
             {node.meta?.text && (
-                <p className="w-full whitespace-pre-wrap break-words font-bold">{node.meta.text}</p>
-            )}
-
-            {(isCurrent && !hideCursor) && (
-                <div
-                    className="absolute -top-2 -right-2 w-6 h-6 pointer-events-none"
-                    style={{
-                        backgroundImage: `url(cursors/${cursor}.png)`,
-                        backgroundSize: "contain",
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "center",
-                    }}
-                />
+                <p className="w-full whitespace-pre-wrap break-words font-bold">
+                    {node.meta.text}
+                </p>
             )}
         </div>
+
+        {isCurrent && !hideCursor && (
+            <div
+                className="absolute -top-2 -right-2 w-6 h-6 pointer-events-none"
+                style={{
+                    backgroundImage: `url(cursors/${cursor}.png)`,
+                    backgroundSize: "contain",
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "center",
+                }}
+            />
+        )}
+    </div>
     );
 }

@@ -1,4 +1,5 @@
 import { useNodeStore } from "./store";
+import type { Node } from "./types";
 
 export function move(dx: number, dy: number) {
     useNodeStore.setState((state) => {
@@ -40,8 +41,8 @@ export function scale(dx: number, dy: number) {
             meta: {
                 ...node.meta,
                 size: {
-                    x: (node.meta?.size?.x ?? 0) + dx,
-                    y: (node.meta?.size?.x ?? 0) + dy,
+                    x: (node.meta?.size?.x ?? 64) + dx,
+                    y: (node.meta?.size?.x ?? 64) + dy,
                 },
             },
         };
@@ -58,4 +59,9 @@ export function setColor(color?:string) {
             },
         };
     })
+}
+
+export function addShape(node:Node){
+    const { currentId, addNode } = useNodeStore.getState();
+    addNode(currentId, node);
 }

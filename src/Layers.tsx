@@ -62,12 +62,15 @@ export function Layers() {
             <button
                 key={id}
                 onClick={() => setCurrent(id)}
-                style={{ zoom: 0.4 }}
-                className={`key-cap shrink-0
+                className={`
+                bg-neutral-800
+                w-4 h-4
+                shrink-0
                 ${node.style}
                 ${node?.meta?.color ? `bg-${node.meta.color}-400!` : ""}
                 ${node?.meta?.color ? `text-${node.meta.color}-900!` : ""}
                 hover:brightness-125 transition-all
+                cursor-pointer
                 ${currentId === id ? "ring-1 ring-white ring-offset-1 ring-offset-neutral-900" : ""}`}
             />
         );

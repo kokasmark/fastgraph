@@ -1,7 +1,7 @@
 import { useNodeStore } from "./store";
 import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState } from "./types";
-import { BoxNode, CircleNode, DatabaseNode, RombusNode, } from "./nodes";
-import { move, scale, setColor } from "./helpers";
+import { BoxNode, CircleNode, CloudNode, DatabaseNode, EllipseNode, HexagonNode, NoteNode, ParallelogramNode, RombusNode, RootNode, TriangleNode, } from "./nodes";
+import { addShape, move, scale, setColor } from "./helpers";
 import { navigate } from "./navigation";
 
 type Action = () => void;
@@ -21,7 +21,7 @@ const baseBindings: Bindings = {
                 name: "Create",
                 children: () => {
                     const root = crypto.randomUUID()
-                    useNodeStore.getState().loadGraph({root, nodes: [ {id: root} ]})
+                    useNodeStore.getState().loadGraph({root, nodes: [ ({...RootNode, id: root}) ]})
                 }
             }
         }
@@ -31,83 +31,54 @@ const baseBindings: Bindings = {
         children: {
             b: {
                 name: "Box",
-                children: () => {
-                    const { currentId, addNode } = useNodeStore.getState();
-                    addNode(currentId, BoxNode);
-                },
+                children: () => addShape(BoxNode),
+            },
+
+            t: {
+                name: "Triangle",
+                children: () => addShape(TriangleNode)
             },
 
             c: {
                 name: "Circle",
-                children: () => {
-                    const { currentId, addNode } = useNodeStore.getState();
-                    addNode(currentId, CircleNode);
-                },
+                children: () => addShape(CircleNode)
+            },
+
+            e: {
+                name: "Ellipse",
+                children: () => addShape(EllipseNode)
+            },
+
+            p: {
+                name: "Parallelogram",
+                children: () => addShape(ParallelogramNode)
+            },
+
+            h: {
+                name: "Hexagon",
+                children: () => addShape(HexagonNode)
             },
 
             r: {
                 name: "Rombus",
-                children: () => {
-                    const { currentId, addNode } = useNodeStore.getState();
-                    addNode(currentId, RombusNode);
-                },
+                children: () => addShape(RombusNode),
             },
 
             d: {
                 name: "Database",
-                children: () => {
-                    const { currentId, addNode } = useNodeStore.getState();
-                    addNode(currentId, DatabaseNode);
-                },
-            },
-        },
-    },
-    r: {
-        name: "Replace",
-        children: {
-            b: {
-                name: "Box",
-                children: () => {
-                    const { currentId, updateNode } = useNodeStore.getState();
-                    updateNode(currentId, (node) => ({
-                        ...node,
-                        style: BoxNode.style,
-                    }));
-                },
+                children: () => addShape(DatabaseNode),
             },
 
-            c: {
-                name: "Circle",
-                children: () => {
-                    const { currentId, updateNode } = useNodeStore.getState();
-                    updateNode(currentId, (node) => ({
-                        ...node,
-                        style: CircleNode.style,
-                    }));
-                },
+            n: {
+                name: "Note",
+                children: () => addShape(NoteNode)
             },
 
-            r: {
-                name: "Rombus",
-                children: () => {
-                    const { currentId, updateNode } = useNodeStore.getState();
-                    updateNode(currentId, (node) => ({
-                        ...node,
-                        style: RombusNode.style,
-                    }));
-                },
+            l: {
+                name: "Cloud",
+                children: () => addShape(CloudNode)
             },
-
-            d: {
-                name: "Database",
-                children: () => {
-                    const { currentId, updateNode } = useNodeStore.getState();
-                    updateNode(currentId, (node) => ({
-                        ...node,
-                        style: DatabaseNode.style,
-                    }));
-                },
-            },
+            
         },
     },
     x: {

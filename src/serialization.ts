@@ -1,4 +1,5 @@
-import { styles, type DeserializedGraph, type Node, type Tuple } from "./types";
+import { styles } from "./nodes";
+import { type DeserializedGraph, type Node, type Tuple } from "./types";
 
 const RAW = 0;
 const DEFLATED = 1;

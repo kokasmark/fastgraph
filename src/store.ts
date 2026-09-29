@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Node, NodeStore, Transaction } from "./types";
-import { GraphLayout, GraphState, styles } from "./types";
+import { GraphLayout, GraphState } from "./types";
+import { RootNode } from "./nodes";
 
 function diffState<S extends object>(before: S, after: S, ignoreKeys: Set<keyof S>): Transaction<S> {
     const changes: Transaction<S> = [];
@@ -18,12 +19,6 @@ function diffState<S extends object>(before: S, after: S, ignoreKeys: Set<keyof 
 }
 
 const rootId = crypto.randomUUID();
-
-const rootNode: Node = {
-    id: rootId,
-    children: [],
-    style: styles[0]
-};
 
 const UNTRACKED_KEYS = new Set<keyof NodeStore>(["undoStack"]);
 
@@ -43,7 +38,7 @@ export const useNodeStore = create<NodeStore>((set, get) => {
     };
 
     return ({
-        nodes: { [rootId]: rootNode },
+        nodes: { [rootId]: {...RootNode, id: rootId} },
         rootId,
         currentId: rootId,
         yankedId: undefined,
