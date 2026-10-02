@@ -1,6 +1,6 @@
 # fastgraph
 
 ![alt text](images/image.png)
-[View this graph on fastgraph](https://kokasmark.github.io/fastgraph/?g=AZXQP0_DMBAF8O9y8yH85xosbxSExMZ-8gCNGyoZW0pS0VLlu6MkRgkkHVhv-N17j1kiSyTnkA2yQo3k8AJpv298C_YCJ7DKCIQzWCM6hObw5fNdKhruUlCHsEsh1WDhLRw9ILT-1IKFh5COJXQOmZD1giYx0pL-2pRt1dsZu395hunR2YeQPgdbIW-wwLuFfyPV-ICEmJynOsXWx3KGpfo1Vn3ueQYxZjDU9U82yGpZQF0pYNa2qWrv4zTO43ZIr5FXgufRqZgFvy3TrlmmvoroPK9Wc-Q9ffh_ID8Vi19ISNUhrinuGw)
+[View this graph on fastgraph](https://kokasmark.github.io/fastgraph/?g=AXXQMU_DMBCG4f9y81XYzmGMty6VGJAQDAyWh0KuVSQrBieIhsr_HdGkyCFlPvn5Xtm5lUQnkbxHd4tOYeXxCHG367gHe4QDWKkFwgBWksgIXfPF5wPReFCUEXo-9GBh_fwECK8xxAQWXsIHQ_boCN0CrkQJT-8fuW66Qkhcw2xVj6OG8n-uMpOr_gSbqVcUvfdD9x4uFVen38Br1IuBGxoHTNG9frgrlIFDiJ_zcClm5QLdUjZqlFf6hz5rMW3bPcPv1ibFtue2PnUqdLRw9KWvvdq-NUXjPjG3kL3_Bg)
 
 A **keyboard-first** graph creator for fast, clean flowcharts.
