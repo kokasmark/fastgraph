@@ -55,24 +55,13 @@ export type NodeMeta ={
 
 export type Node = {
     id: string;
-    style?: string;
+    shape: number;
     parents?: string[];
     children?: string[];
     meta?: NodeMeta;
 }
 
-export type SerializedNode = {
-    s?: number;
-    p?: number[];
-    c?: number[];
-    m?: NodeMeta;
-};
-
-export type Tuple = [number?, number[]?, NodeMeta?];
-
-export type SerializedGraph = {
-    n: SerializedNode[];
-};
+export type Tuple = [number, number[]?, NodeMeta?];
 
 export type DeserializedGraph = {
     nodes: Node[];

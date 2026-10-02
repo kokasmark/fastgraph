@@ -21,7 +21,7 @@ export function Help() {
                         {labelFor("escape")}
                     </div>
                     <p className="text-xs text-neutral-500">Cancel</p>
-                </div>
+            </div>
         </div>
     );
 }

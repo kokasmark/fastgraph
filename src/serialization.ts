@@ -1,4 +1,3 @@
-import { styles } from "./nodes";
 import { type DeserializedGraph, type Node, type Tuple } from "./types";
 
 const RAW = 0;
@@ -44,13 +43,7 @@ export async function encode(nodes: Node[]): Promise<string> {
     });
 
     const tuples = nodes.map((node, i) => {
-        let s = 0;
-        if (node.style !== undefined) {
-            const k = styles.indexOf(node.style);
-            if (k < 0) throw new Error(`Unknown style: ${String(node.style)}`);
-            s = k + 1;
-        }
-
+        let s = node.shape;
         const c = [...children[i]].sort((a, b) => a - b);
         const tuple: unknown[] = [s, c, node.meta];
 
@@ -98,7 +91,7 @@ export async function decode(value: string): Promise<DeserializedGraph> {
         root: ids[0],
         nodes: tuples.map(([s, c, m], i) => ({
             id: ids[i],
-            ...(s ? { style: styles[s - 1] } : {}),
+            ...({ shape: s }),
             ...(parents[i].length ? { parents: parents[i] } : {}),
             ...(c?.length ? { children: c.map(child => ids[child]) } : {}),
             ...(m !== undefined ? { meta: m } : {})

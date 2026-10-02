@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNodeStore } from "./store";
+import { Shapes } from "./shapes";
 
 export function Layers() {
     const nodes = useNodeStore((s) => s.nodes);
@@ -58,21 +59,23 @@ export function Layers() {
         const node = nodes[id];
         if (!node) return null;
 
+        const Shape = node.shape > -1 ? Shapes[node.shape].Svg : null;
+    
         return (
             <button
                 key={id}
                 onClick={() => setCurrent(id)}
                 className={`
-                bg-neutral-800
                 w-4 h-4
                 shrink-0
-                ${node.style}
-                ${node?.meta?.color ? `bg-${node.meta.color}-400!` : ""}
-                ${node?.meta?.color ? `text-${node.meta.color}-900!` : ""}
-                hover:brightness-125 transition-all
+                ${node?.meta?.color ? `text-${node.meta.color}-400` : "text-neutral-700"}
+                hover:brightness-125
                 cursor-pointer
-                ${currentId === id ? "ring-1 ring-white ring-offset-1 ring-offset-neutral-900" : ""}`}
-            />
+                rounded-lg
+                ${currentId === id ? "[filter:drop-shadow(1px_0_0_#fff)_drop-shadow(-1px_0_0_#fff)_drop-shadow(0_1px_0_#fff)_drop-shadow(0_-1px_0_#fff)]" : ""}`}
+            >
+                {Shape && <Shape />}
+            </button>
         );
     }
 

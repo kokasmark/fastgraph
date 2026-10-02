@@ -1,3 +1,4 @@
+import { Shapes } from "./shapes";
 import { useNodeStore } from "./store";
 import { GraphState } from "./types";
 import type { Node } from "./types";
@@ -21,42 +22,43 @@ export function NodeComponent({ node, hideCursor }: { node: Node, hideCursor?: b
     const width = node.meta?.size?.x;
     const height = node.meta?.size?.y;
 
+    const Shape = node.shape > -1 ? Shapes[node.shape].Svg : null;
+
     return (
-       <div
+        <div
             style={{
                 minWidth: 64,
                 minHeight: 65,
                 ...(width !== undefined && { width, maxWidth: width }),
                 ...(height !== undefined && { height, maxHeight: height }),
             }}
-            className="relative grid w-fit max-w-64"
+            className="relative flex w-fit max-w-64"
         >
+            <div
+                className={`absolute inset-0 ${node.meta?.color ? `text-${node.meta.color}-400` : "text-neutral-700"}`}
+            >
+                {Shape && <Shape className="block" />}
+            </div>
 
-        <div
-            className={`flex items-center justify-center text-center p-1 bg-neutral-800 text-neutral-400
-                ${node.style}
-                ${node?.meta?.color ? `bg-${node.meta.color}-400!` : ""}
-                ${node?.meta?.color ? `text-${node.meta.color}-900!` : ""}
-            `}
-        >
-            {node.meta?.text && (
-                <p className="w-full whitespace-pre-wrap break-words font-bold">
-                    {node.meta.text}
-                </p>
+            <div className="relative flex flex-1 items-center justify-center p-1 text-center w-full">
+                {node.meta?.text && (
+                    <p className={`w-full whitespace-pre-wrap break-words font-bold ${node.meta.color ? `text-${node.meta.color}-900` : "text-neutral-900"}`}>
+                        {node.meta.text}
+                    </p>
+                )}
+            </div>
+
+            {isCurrent && !hideCursor && (
+                <div
+                    className="absolute -top-2 -right-2 w-6 h-6 pointer-events-none"
+                    style={{
+                        backgroundImage: `url(cursors/${cursor}.png)`,
+                        backgroundSize: "contain",
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "center",
+                    }}
+                />
             )}
         </div>
-
-        {isCurrent && !hideCursor && (
-            <div
-                className="absolute -top-2 -right-2 w-6 h-6 pointer-events-none"
-                style={{
-                    backgroundImage: `url(cursors/${cursor}.png)`,
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "center",
-                }}
-            />
-        )}
-    </div>
     );
 }
