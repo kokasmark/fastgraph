@@ -5,7 +5,7 @@ import { Shapes } from "./shapes";
 export function Layers() {
     const nodes = useNodeStore((s) => s.nodes);
     const rootId = useNodeStore((s) => s.rootId);
-    const currentId = useNodeStore((s) => s.currentId);
+    const selected = useNodeStore((s) => s.selected);
     const setCurrent = useNodeStore((s) => s.setCurrent);
 
     const levels = useMemo(() => {
@@ -72,7 +72,7 @@ export function Layers() {
                 hover:brightness-125
                 cursor-pointer
                 rounded-lg
-                ${currentId === id ? "[filter:drop-shadow(1px_0_0_#fff)_drop-shadow(-1px_0_0_#fff)_drop-shadow(0_1px_0_#fff)_drop-shadow(0_-1px_0_#fff)]" : ""}`}
+                ${selected.includes(id) ? "[filter:drop-shadow(1px_0_0_#fff)_drop-shadow(-1px_0_0_#fff)_drop-shadow(0_1px_0_#fff)_drop-shadow(0_-1px_0_#fff)]" : ""}`}
             >
                 {Shape && <Shape />}
             </button>
@@ -88,7 +88,7 @@ export function Layers() {
                     style={{ paddingRight: 12 + depth * 16 }}
                 >
                     {groups.map((group) => (
-                        <div key={group.join("-")} className="flex items-center gap-0">
+                        <div key={group.join("-")} className="flex items-center gap-2">
                             {group.map(renderNode)}
                         </div>
                     ))}

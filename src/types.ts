@@ -3,7 +3,8 @@ export enum GraphState {
     Grabbed,
     Typing,
     Scale,
-    Yanked
+    Yanked,
+    Multi
 }
 
 export enum GraphLayout {
@@ -85,8 +86,8 @@ export type Transaction<S> = StoreChange<S>[];
 export type NodeStore = {
     nodes: Record<string, Node>;
     rootId: string;
-    currentId: string;
-    yankedId?: string;
+    selected: string[];
+    yanked: string[];
     state: GraphState;
     layout: GraphLayout;
     activeBindings: Bindings | null;
@@ -99,9 +100,11 @@ export type NodeStore = {
     setState: (state: GraphState) => void;
     setLayoutFlag: (flag: GraphLayout, category: GraphLayout) => void;
     updateNode: (id: string, updater: (node: Node) => Node) => void;
+    apply: (updater: (node: Node) => Node) => void;
     addNode: (parentId: string, child: Node) => string | undefined;
     setCurrent: (nodeId: string) => void;
-    setYanked: (nodeId?: string) => void;
+    setSelected: (nodeIds: string[]) => void;
+    setYanked: (nodeIds?: string[]) => void;
     removeNode: (nodeId: string) => void;
     undo: () => void;
 };

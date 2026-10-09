@@ -14,7 +14,7 @@ export function move(dx: number, dy: number) {
             state.nodes[nodeId]?.children?.forEach(collect);
         };
 
-        collect(useNodeStore.getState().currentId);
+        useNodeStore.getState().selected.forEach(collect);
 
         const nodes = { ...state.nodes };
         ids.forEach((nodeId) => {
@@ -35,7 +35,7 @@ export function move(dx: number, dy: number) {
 }
 
 export function scale(dx: number, dy: number) {
-    useNodeStore.getState().updateNode(useNodeStore.getState().currentId, (node) => {
+    useNodeStore.getState().apply((node) => {
         return {
             ...node,
             meta: {
@@ -50,7 +50,7 @@ export function scale(dx: number, dy: number) {
 }
 
 export function setColor(color?:string) {
-    useNodeStore.getState().updateNode(useNodeStore.getState().currentId, (node) => {
+    useNodeStore.getState().apply((node) => {
         return {
             ...node,
             meta: {
@@ -62,6 +62,6 @@ export function setColor(color?:string) {
 }
 
 export function addShape(node:Node){
-    const { currentId, addNode } = useNodeStore.getState();
-    addNode(currentId, node);
+    const { selected, addNode } = useNodeStore.getState();
+    [...selected].forEach((parentId) => addNode(parentId, node));
 }

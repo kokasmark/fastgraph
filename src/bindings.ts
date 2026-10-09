@@ -13,6 +13,41 @@ type Bindings = {
     };
 };
 
+function pasteNode(yankedId: string, parentId: string) {
+    const { addNode, findNode } = useNodeStore.getState();
+
+    const yanked = findNode(yankedId);
+    if (!yanked) return;
+
+    addNode(parentId, yanked);
+}
+
+function pasteTree(yankedId: string, parentId: string) {
+    const { addNode, findNode } = useNodeStore.getState();
+
+    const yanked = findNode(yankedId);
+    if (!yanked) return;
+
+    const newRootId = addNode(parentId, { ...yanked, children: [] })!;
+
+    const stack: { sourceId: string; newParentId: string }[] = [];
+    yanked.children?.forEach((childId) =>
+        stack.push({ sourceId: childId, newParentId: newRootId })
+    );
+
+    while (stack.length > 0) {
+        const { sourceId, newParentId } = stack.pop()!;
+        const template = findNode(sourceId);
+        if (!template) continue;
+
+        const newId = addNode(newParentId, { ...template, children: [] })!;
+
+        template.children?.forEach((childId) =>
+            stack.push({ sourceId: childId, newParentId: newId })
+        );
+    }
+}
+
 const baseBindings: Bindings = {
     n: {
         name: "New Graph",
@@ -84,8 +119,8 @@ const baseBindings: Bindings = {
     x: {
         name: "Delete",
         children: () => {
-            const { currentId, removeNode } = useNodeStore.getState();
-            removeNode(currentId);
+            const { selected, removeNode } = useNodeStore.getState();
+            [...selected].forEach((id) => removeNode(id));
         },
     },
     g: {
@@ -103,33 +138,39 @@ const baseBindings: Bindings = {
     y: {
         name: "Yank",
         children: () => {
-            const { setState, setYanked, currentId } = useNodeStore.getState();
-            setYanked(currentId)
+            const { setState, setYanked, selected } = useNodeStore.getState();
+            setYanked(selected)
             setState(GraphState.Yanked)
         },
+    },
+    m: {
+        name: "Multi",
+        children: () => useNodeStore.getState().setState(GraphState.Multi),
     },
     d: {
         name: "Detach",
         children: () => {
-            const { rootId, updateNode, currentId, findNode } = useNodeStore.getState();
+            const { rootId, updateNode, selected, findNode, apply } = useNodeStore.getState();
 
-            const current = findNode(currentId);
+            const ids = [...selected];
 
-            current?.parents?.forEach((parentId) => {
-                updateNode(parentId, (node) => ({
-                    ...node,
-                    children: node.children?.filter((n) => n !== currentId)
-                }));
+            ids.forEach((id) => {
+                findNode(id)?.parents?.forEach((parentId) => {
+                    updateNode(parentId, (node) => ({
+                        ...node,
+                        children: node.children?.filter((n) => n !== id)
+                    }));
+                });
             });
 
-            updateNode(currentId, (node) => ({
+            apply((node) => ({
                 ...node,
                 parents: [rootId]
             }));
 
             updateNode(rootId, (node) => ({
                 ...node,
-                children: [...(node.children ?? []), currentId]
+                children: [...(node.children ?? []), ...ids]
             }));
         },
     },
@@ -296,6 +337,25 @@ const resizingBindings: Bindings = {
     },
 }
 
+const multiBindings: Bindings = {
+    m: {
+        name: "Done",
+        children: () => useNodeStore.getState().setState(GraphState.None),
+    },
+    u: {
+        name: "Unselect",
+        children: () => {
+            const { selected, setSelected, setState } = useNodeStore.getState();
+            setSelected([selected[selected.length - 1]]);
+            setState(GraphState.None);
+        },
+    },
+    arrowup: baseBindings.arrowup,
+    arrowdown: baseBindings.arrowdown,
+    arrowleft: baseBindings.arrowleft,
+    arrowright: baseBindings.arrowright,
+}
+
 const yankedBindings: Bindings = {
     y: {
         name: "Release",
@@ -311,45 +371,19 @@ const yankedBindings: Bindings = {
             p: {
                 name: "Without Children",
                 children: () => {
-                    const { addNode, yankedId, currentId, findNode } = useNodeStore.getState();
+                    const { yanked, selected } = useNodeStore.getState();
 
-                    if (!yankedId) return;
-
-                    const yanked = findNode(yankedId);
-
-                    if (!yanked) return;
-
-                    addNode(currentId, yanked)
+                    const parents = [...selected];
+                    parents.forEach((parentId) => yanked.forEach((id) => pasteNode(id, parentId)));
                 }
             },
             w: {
                 name: "With Children",
                 children: () => {
-                    const { addNode, yankedId, currentId, findNode } = useNodeStore.getState();
+                    const { yanked, selected } = useNodeStore.getState();
 
-                    if (!yankedId) return;
-
-                    const yanked = findNode(yankedId);
-                    if (!yanked) return;
-
-                    const newRootId = addNode(currentId, { ...yanked, children: [] })!;
-
-                    const stack: { sourceId: string; newParentId: string }[] = [];
-                    yanked.children?.forEach((childId) =>
-                        stack.push({ sourceId: childId, newParentId: newRootId })
-                    );
-
-                    while (stack.length > 0) {
-                        const { sourceId, newParentId } = stack.pop()!;
-                        const template = findNode(sourceId);
-                        if (!template) continue;
-
-                        const newId = addNode(newParentId, { ...template, children: [] })!;
-
-                        template.children?.forEach((childId) =>
-                            stack.push({ sourceId: childId, newParentId: newId })
-                        );
-                    }
+                    const parents = [...selected];
+                    parents.forEach((parentId) => yanked.forEach((id) => pasteTree(id, parentId)));
                 },
             }
         },
@@ -360,48 +394,30 @@ const yankedBindings: Bindings = {
             x: {
                 name: "Without Children",
                 children: () => {
-                    const { addNode, yankedId, currentId, findNode, removeNode } = useNodeStore.getState();
+                    const { yanked, selected, removeNode } = useNodeStore.getState();
 
-                    if (!yankedId) return;
+                    const parents = [...selected];
+                    const ids = [...yanked];
+                    const copies = ids.map((id) => useNodeStore.getState().findNode(id));
 
-                    const yanked = findNode(yankedId);
-
-                    if (!yanked) return;
-
-                    removeNode(yankedId)
-                    addNode(currentId, yanked)
+                    ids.forEach((id) => removeNode(id));
+                    parents.forEach((parentId) =>
+                        copies.forEach((copy) => {
+                            if (copy) useNodeStore.getState().addNode(parentId, copy);
+                        })
+                    );
                 }
             },
             w: {
                 name: "With Children",
                 children: () => {
-                    const { addNode, yankedId, currentId, findNode, removeNode } = useNodeStore.getState();
+                    const { yanked, selected, removeNode } = useNodeStore.getState();
 
-                    if (!yankedId) return;
+                    const parents = [...selected];
+                    const ids = [...yanked];
 
-                    const yanked = findNode(yankedId);
-                    if (!yanked) return;
-
-                    const newRootId = addNode(currentId, { ...yanked, children: [] })!;
-
-                    const stack: { sourceId: string; newParentId: string }[] = [];
-                    yanked.children?.forEach((childId) =>
-                        stack.push({ sourceId: childId, newParentId: newRootId })
-                    );
-
-                    while (stack.length > 0) {
-                        const { sourceId, newParentId } = stack.pop()!;
-                        const template = findNode(sourceId);
-                        if (!template) continue;
-
-                        const newId = addNode(newParentId, { ...template, children: [] })!;
-
-                        template.children?.forEach((childId) =>
-                            stack.push({ sourceId: childId, newParentId: newId })
-                        );
-                    }
-
-                    removeNode(yankedId)
+                    parents.forEach((parentId) => ids.forEach((id) => pasteTree(id, parentId)));
+                    ids.forEach((id) => removeNode(id));
                 },
             }
         },
@@ -409,57 +425,63 @@ const yankedBindings: Bindings = {
     j: {
         name: "Join",
         children: () => {
-            const { yankedId, currentId, updateNode } = useNodeStore.getState();
+            const { yanked, selected, updateNode } = useNodeStore.getState();
 
-            if (!yankedId || yankedId === currentId) return;
+            selected.forEach((currentId) => {
+                yanked.forEach((yankedId) => {
+                    if (yankedId === currentId) return;
 
-            updateNode(yankedId, (node) => {
-                const parents = node.parents ?? [];
-                if (parents.includes(currentId)) return node;
-                return { ...node, parents: [...parents, currentId] };
-            });
+                    updateNode(yankedId, (node) => {
+                        const parents = node.parents ?? [];
+                        if (parents.includes(currentId)) return node;
+                        return { ...node, parents: [...parents, currentId] };
+                    });
 
-            updateNode(currentId, (node) => {
-                const children = node.children ?? [];
-                if (children.includes(yankedId)) return node;
-                return { ...node, children: [...children, yankedId] };
+                    updateNode(currentId, (node) => {
+                        const children = node.children ?? [];
+                        if (children.includes(yankedId)) return node;
+                        return { ...node, children: [...children, yankedId] };
+                    });
+                });
             });
         },
     },
     s: {
         name: "Separate",
         children: () => {
-            const { yankedId, currentId, nodes, updateNode, rootId } = useNodeStore.getState();
+            const { yanked, selected, updateNode, rootId } = useNodeStore.getState();
 
-            if (!yankedId) return;
+            selected.forEach((currentId) => {
+                yanked.forEach((yankedId) => {
+                    const yankedNode = useNodeStore.getState().nodes[yankedId];
 
-            const yanked = nodes[yankedId];
+                    if (!yankedNode) return;
 
-            if (!yanked) return;
+                    if (yankedNode.parents?.includes(currentId)) {
+                        const remainingParents = yankedNode.parents.filter((id) => id !== currentId);
+                        const orphaned = remainingParents.length === 0;
 
-            if (yanked.parents?.includes(currentId)) {
-                const remainingParents = yanked.parents.filter((id) => id !== currentId);
-                const orphaned = remainingParents.length === 0;
+                        updateNode(yankedId, (node) => ({
+                            ...node,
+                            parents: orphaned ? [rootId] : remainingParents
+                        }));
 
-                updateNode(yankedId, (node) => ({
-                    ...node,
-                    parents: orphaned ? [rootId] : remainingParents
-                }));
+                        updateNode(currentId, (node) => ({
+                            ...node,
+                            children: node.children?.filter((id) => id !== yankedId)
+                        }));
 
-                updateNode(currentId, (node) => ({
-                    ...node,
-                    children: node.children?.filter((id) => id !== yankedId)
-                }));
-
-                if (orphaned) {
-                    updateNode(rootId, (node) => ({
-                        ...node,
-                        children: node.children?.includes(yankedId)
-                            ? node.children
-                            : [...(node.children ?? []), yankedId]
-                    }));
-                }
-            }
+                        if (orphaned) {
+                            updateNode(rootId, (node) => ({
+                                ...node,
+                                children: node.children?.includes(yankedId)
+                                    ? node.children
+                                    : [...(node.children ?? []), yankedId]
+                            }));
+                        }
+                    }
+                });
+            });
         },
     },
     arrowup: baseBindings.arrowup,
@@ -474,6 +496,7 @@ const stateBindings: Partial<Record<GraphState, Bindings>> = {
     [GraphState.Typing]: typingBindings,
     [GraphState.Scale]: resizingBindings,
     [GraphState.Yanked]: yankedBindings,
+    [GraphState.Multi]: multiBindings,
 };
 
 export function resolveActiveBindings(): Bindings {
@@ -505,7 +528,7 @@ export function createKeyResolver(
 
         if (useNodeStore.getState().state === GraphState.Typing && !entry) {
             if (key === "Backspace") {
-                useNodeStore.getState().updateNode(useNodeStore.getState().currentId, (node) => {
+                useNodeStore.getState().apply((node) => {
                     const text = node.meta?.text ?? "";
                     return {
                         ...node,
@@ -522,7 +545,7 @@ export function createKeyResolver(
                 return;
             }
 
-            useNodeStore.getState().updateNode(useNodeStore.getState().currentId, (node) => {
+            useNodeStore.getState().apply((node) => {
                 const text = (node.meta?.text ?? "") + key;
                 return {
                     ...node,

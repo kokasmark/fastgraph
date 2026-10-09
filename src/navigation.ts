@@ -1,4 +1,5 @@
 import { useNodeStore } from "./store";
+import { GraphState } from "./types";
 import type { Rect } from "./types";
 
 export const rectsMap = new Map<string, Rect>();
@@ -9,7 +10,8 @@ const gap = (a0: number, a1: number, b0: number, b1: number) =>
     Math.max(0, Math.max(a0, b0) - Math.min(a1, b1));
 
 export function navigate(dir: Dir) {
-    const { currentId, rootId, findNode, setCurrent } = useNodeStore.getState();
+    const { selected, rootId, findNode, setSelected, state } = useNodeStore.getState();
+    const currentId = selected[selected.length - 1];
     const from = rectsMap.get(currentId);
     if (!from) return;
 
@@ -45,5 +47,8 @@ export function navigate(dir: Dir) {
         if (!best || score < best.score) best = { id, score };
     }
 
-    if (best) setCurrent(best.id);
+    if (best) {
+        const id = best.id;
+        setSelected(state === GraphState.Multi ? [...selected.filter((s) => s !== id), id] : [id]);
+    }
 }

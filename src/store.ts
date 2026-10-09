@@ -40,8 +40,8 @@ export const useNodeStore = create<NodeStore>((set, get) => {
     return ({
         nodes: { [rootId]: {...RootNode, id: rootId} },
         rootId,
-        currentId: rootId,
-        yankedId: undefined,
+        selected: [rootId],
+        yanked: [],
         state: GraphState.None,
         layout: GraphLayout.Right | GraphLayout.Balanced | GraphLayout.Brandes_Koepf,
         activeBindings: null,
@@ -59,8 +59,8 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                 ...state,
                 nodes,
                 rootId: graph.root,
-                currentId: graph.root,
-                yankedId: undefined,
+                selected: [graph.root],
+                yanked: [],
             }));
         },
 
@@ -79,6 +79,16 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                         [id]: updater(node),
                     },
                 };
+            });
+        },
+
+        apply: (updater) => {
+            trackedSet((s) => {
+                const nodes = { ...s.nodes };
+                s.selected.forEach((id) => {
+                    if (nodes[id]) nodes[id] = updater(nodes[id]);
+                });
+                return { nodes };
             });
         },
 
@@ -114,20 +124,25 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                     },
                     [newNode.id]: newNode,
                 },
-                currentId: newNode.id,
+                selected: [newNode.id],
             }));
 
             return newNode.id
         },
 
         setCurrent: (nodeId) => {
-            if (get().nodes[nodeId]) trackedSet({ currentId: nodeId });
+            if (get().nodes[nodeId]) trackedSet({ selected: [nodeId] });
+        },
+
+        setSelected: (nodeIds) => {
+            const valid = nodeIds.filter((id) => get().nodes[id]);
+            if (valid.length > 0) trackedSet({ selected: valid });
         },
 
         setActiveBindings: (bindings) => rawSet({ activeBindings: bindings }),
 
-        setYanked: (nodeId) => {
-            trackedSet({ yankedId: nodeId });
+        setYanked: (nodeIds) => {
+            trackedSet({ yanked: nodeIds ?? [] });
         },
 
         removeNode: (nodeId) => {
@@ -155,11 +170,12 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                     };
                 });
 
-                const currentId = idsToRemove.has(s.currentId)
-                    ? node.parents?.[0] ?? s.rootId
-                    : s.currentId;
+                const remaining = s.selected.filter((id) => !idsToRemove.has(id));
+                const selected = remaining.length > 0
+                    ? remaining
+                    : [node.parents?.[0] ?? s.rootId];
 
-                return { nodes, currentId };
+                return { nodes, selected };
             });
         },
 
@@ -178,3 +194,5 @@ export const useNodeStore = create<NodeStore>((set, get) => {
         }
     })
 });
+
+export const apply = (updater: (node: Node) => Node) => useNodeStore.getState().apply(updater);

@@ -13,8 +13,8 @@ function cursorForState(state: GraphState): string {
 
 
 export function NodeComponent({ node, hideCursor }: { node: Node, hideCursor?: boolean }) {
-    const { currentId, rootId } = useNodeStore();
-    const isCurrent = currentId === node.id && rootId !== node.id;
+    const { selected, rootId } = useNodeStore();
+    const isCurrent = selected.includes(node.id) && rootId !== node.id;
     const appState = useNodeStore((s) => s.state);
 
     const cursor = cursorForState(appState);
