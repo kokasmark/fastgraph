@@ -1,4 +1,4 @@
-import { useNodeStore } from "./store";
+import { useFastGraphStore } from "./store";
 import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState } from "./types";
 import { BoxNode, CircleNode, CloudNode, DatabaseNode, EllipseNode, HexagonNode, NoteNode, ParallelogramNode, RombusNode, RootNode, TriangleNode, } from "./nodes";
 import { addShape, move, scale, setColor } from "./helpers";
@@ -14,7 +14,7 @@ type Bindings = {
 };
 
 function pasteNode(yankedId: string, parentId: string) {
-    const { addNode, findNode } = useNodeStore.getState();
+    const { addNode, findNode } = useFastGraphStore.getState();
 
     const yanked = findNode(yankedId);
     if (!yanked) return;
@@ -23,7 +23,7 @@ function pasteNode(yankedId: string, parentId: string) {
 }
 
 function pasteTree(yankedId: string, parentId: string) {
-    const { addNode, findNode } = useNodeStore.getState();
+    const { addNode, findNode } = useFastGraphStore.getState();
 
     const yanked = findNode(yankedId);
     if (!yanked) return;
@@ -56,7 +56,7 @@ const baseBindings: Bindings = {
                 name: "Create",
                 children: () => {
                     const root = crypto.randomUUID()
-                    useNodeStore.getState().loadGraph({root, nodes: [ ({...RootNode, id: root}) ]})
+                    useFastGraphStore.getState().loadGraph({ root, nodes: [({ ...RootNode, id: root })] })
                 }
             }
         }
@@ -113,44 +113,44 @@ const baseBindings: Bindings = {
                 name: "Cloud",
                 children: () => addShape(CloudNode)
             },
-            
+
         },
     },
     x: {
         name: "Delete",
         children: () => {
-            const { selected, removeNode } = useNodeStore.getState();
+            const { selected, removeNode } = useFastGraphStore.getState();
             [...selected].forEach((id) => removeNode(id));
         },
     },
     g: {
         name: "Grab",
-        children: () => useNodeStore.getState().setState(GraphState.Grabbed),
+        children: () => useFastGraphStore.getState().setState(GraphState.Grabbed),
     },
     t: {
         name: "Text",
-        children: () => useNodeStore.getState().setState(GraphState.Typing),
+        children: () => useFastGraphStore.getState().setState(GraphState.Typing),
     },
     s: {
         name: "Resize",
-        children: () => useNodeStore.getState().setState(GraphState.Scale),
+        children: () => useFastGraphStore.getState().setState(GraphState.Scale),
     },
     y: {
         name: "Yank",
         children: () => {
-            const { setState, setYanked, selected } = useNodeStore.getState();
+            const { setState, setYanked, selected } = useFastGraphStore.getState();
             setYanked(selected)
             setState(GraphState.Yanked)
         },
     },
     m: {
         name: "Multi",
-        children: () => useNodeStore.getState().setState(GraphState.Multi),
+        children: () => useFastGraphStore.getState().setState(GraphState.Multi),
     },
     d: {
         name: "Detach",
         children: () => {
-            const { rootId, updateNode, selected, findNode, apply } = useNodeStore.getState();
+            const { rootId, updateNode, selected, findNode, apply } = useFastGraphStore.getState();
 
             const ids = [...selected];
 
@@ -225,11 +225,11 @@ const baseBindings: Bindings = {
                 children: {
                     arrowright: {
                         name: "Right",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.DRight, GraphLayoutDirection)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.DRight, GraphLayoutDirection)
                     },
                     arrowdown: {
                         name: "Down",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.DDown, GraphLayoutDirection)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.DDown, GraphLayoutDirection)
                     }
                 }
             },
@@ -238,19 +238,19 @@ const baseBindings: Bindings = {
                 children: {
                     arrowup: {
                         name: "Up",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Up, GraphLayoutAlignment)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.Up, GraphLayoutAlignment)
                     },
                     arrowdown: {
                         name: "Down",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Down, GraphLayoutAlignment)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.Down, GraphLayoutAlignment)
                     },
                     arrowleft: {
                         name: "Left",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Left, GraphLayoutAlignment)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.Left, GraphLayoutAlignment)
                     },
                     arrowright: {
                         name: "Right",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Right, GraphLayoutAlignment)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.Right, GraphLayoutAlignment)
                     }
                 }
             },
@@ -259,25 +259,49 @@ const baseBindings: Bindings = {
                 children: {
                     b: {
                         name: "Brandes Koepf",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Brandes_Koepf, GraphLayoutStrategy)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.Brandes_Koepf, GraphLayoutStrategy)
                     },
                     n: {
                         name: "Network Simplex",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Network_Simplex, GraphLayoutStrategy)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.Network_Simplex, GraphLayoutStrategy)
                     },
                     l: {
                         name: "Linear Segments",
-                        children: () => useNodeStore.getState().setLayoutFlag(GraphLayout.Linear_Segments, GraphLayoutStrategy)
+                        children: () => useFastGraphStore.getState().setLayoutFlag(GraphLayout.Linear_Segments, GraphLayoutStrategy)
                     }
                 }
             }
         }
     },
+    r: {
+        name: "Repeat",
+        children: () => {
+            const { repeat } = useFastGraphStore.getState();
+            repeat();
+        }
+    },
     z: {
         name: "Undo",
         children: () => {
-            const { undo } = useNodeStore.getState();
+            const { undo } = useFastGraphStore.getState();
             undo()
+        }
+    },
+    e: {
+        name: "Export",
+        children: {
+            i: {
+                name: "Image",
+                children: () => {
+
+                }
+            },
+            m: {
+                name: "Mermaid",
+                children: () => {
+
+                }
+            }
         }
     },
 };
@@ -285,7 +309,7 @@ const baseBindings: Bindings = {
 const grabbedBindings: Bindings = {
     g: {
         name: "Release",
-        children: () => useNodeStore.getState().setState(GraphState.None),
+        children: () => useFastGraphStore.getState().setState(GraphState.None),
     },
     arrowup: {
         name: "Up",
@@ -309,7 +333,7 @@ const typingBindings: Bindings = {
     enter: {
         name: "Enter",
         children: () => {
-            useNodeStore.getState().setState(GraphState.None)
+            useFastGraphStore.getState().setState(GraphState.None)
         }
     }
 }
@@ -317,7 +341,7 @@ const typingBindings: Bindings = {
 const resizingBindings: Bindings = {
     s: {
         name: "Release",
-        children: () => useNodeStore.getState().setState(GraphState.None),
+        children: () => useFastGraphStore.getState().setState(GraphState.None),
     },
     arrowup: {
         name: "Scale",
@@ -340,12 +364,12 @@ const resizingBindings: Bindings = {
 const multiBindings: Bindings = {
     m: {
         name: "Done",
-        children: () => useNodeStore.getState().setState(GraphState.None),
+        children: () => useFastGraphStore.getState().setState(GraphState.None),
     },
     u: {
         name: "Unselect",
         children: () => {
-            const { selected, setSelected, setState } = useNodeStore.getState();
+            const { selected, setSelected, setState } = useFastGraphStore.getState();
             setSelected([selected[selected.length - 1]]);
             setState(GraphState.None);
         },
@@ -360,7 +384,7 @@ const yankedBindings: Bindings = {
     y: {
         name: "Release",
         children: () => {
-            const { setState, setYanked } = useNodeStore.getState();
+            const { setState, setYanked } = useFastGraphStore.getState();
             setYanked(undefined)
             setState(GraphState.None)
         },
@@ -371,7 +395,7 @@ const yankedBindings: Bindings = {
             p: {
                 name: "Without Children",
                 children: () => {
-                    const { yanked, selected } = useNodeStore.getState();
+                    const { yanked, selected } = useFastGraphStore.getState();
 
                     const parents = [...selected];
                     parents.forEach((parentId) => yanked.forEach((id) => pasteNode(id, parentId)));
@@ -380,7 +404,7 @@ const yankedBindings: Bindings = {
             w: {
                 name: "With Children",
                 children: () => {
-                    const { yanked, selected } = useNodeStore.getState();
+                    const { yanked, selected } = useFastGraphStore.getState();
 
                     const parents = [...selected];
                     parents.forEach((parentId) => yanked.forEach((id) => pasteTree(id, parentId)));
@@ -394,16 +418,16 @@ const yankedBindings: Bindings = {
             x: {
                 name: "Without Children",
                 children: () => {
-                    const { yanked, selected, removeNode } = useNodeStore.getState();
+                    const { yanked, selected, removeNode } = useFastGraphStore.getState();
 
                     const parents = [...selected];
                     const ids = [...yanked];
-                    const copies = ids.map((id) => useNodeStore.getState().findNode(id));
+                    const copies = ids.map((id) => useFastGraphStore.getState().findNode(id));
 
                     ids.forEach((id) => removeNode(id));
                     parents.forEach((parentId) =>
                         copies.forEach((copy) => {
-                            if (copy) useNodeStore.getState().addNode(parentId, copy);
+                            if (copy) useFastGraphStore.getState().addNode(parentId, copy);
                         })
                     );
                 }
@@ -411,7 +435,7 @@ const yankedBindings: Bindings = {
             w: {
                 name: "With Children",
                 children: () => {
-                    const { yanked, selected, removeNode } = useNodeStore.getState();
+                    const { yanked, selected, removeNode } = useFastGraphStore.getState();
 
                     const parents = [...selected];
                     const ids = [...yanked];
@@ -425,7 +449,7 @@ const yankedBindings: Bindings = {
     j: {
         name: "Join",
         children: () => {
-            const { yanked, selected, updateNode } = useNodeStore.getState();
+            const { yanked, selected, updateNode } = useFastGraphStore.getState();
 
             selected.forEach((currentId) => {
                 yanked.forEach((yankedId) => {
@@ -449,11 +473,11 @@ const yankedBindings: Bindings = {
     s: {
         name: "Separate",
         children: () => {
-            const { yanked, selected, updateNode, rootId } = useNodeStore.getState();
+            const { yanked, selected, updateNode, rootId } = useFastGraphStore.getState();
 
             selected.forEach((currentId) => {
                 yanked.forEach((yankedId) => {
-                    const yankedNode = useNodeStore.getState().nodes[yankedId];
+                    const yankedNode = useFastGraphStore.getState().nodes[yankedId];
 
                     if (!yankedNode) return;
 
@@ -500,7 +524,7 @@ const stateBindings: Partial<Record<GraphState, Bindings>> = {
 };
 
 export function resolveActiveBindings(): Bindings {
-    const state = useNodeStore.getState().state;
+    const state = useFastGraphStore.getState().state;
     const bindings = stateBindings[state] ?? baseBindings;
 
     return bindings;
@@ -520,15 +544,15 @@ export function createKeyResolver(
 
         if (key === "Escape" && !entry) {
             chord = null;
-            useNodeStore.getState().setActiveBindings(baseBindings);
-            useNodeStore.getState().setState(GraphState.None);
+            useFastGraphStore.getState().setActiveBindings(baseBindings);
+            useFastGraphStore.getState().setState(GraphState.None);
             onKey(undefined, undefined, "fail");
             return;
         }
 
-        if (useNodeStore.getState().state === GraphState.Typing && !entry) {
+        if (useFastGraphStore.getState().state === GraphState.Typing && !entry) {
             if (key === "Backspace") {
-                useNodeStore.getState().apply((node) => {
+                useFastGraphStore.getState().apply((node) => {
                     const text = node.meta?.text ?? "";
                     return {
                         ...node,
@@ -545,7 +569,7 @@ export function createKeyResolver(
                 return;
             }
 
-            useNodeStore.getState().apply((node) => {
+            useFastGraphStore.getState().apply((node) => {
                 const text = (node.meta?.text ?? "") + key;
                 return {
                     ...node,
@@ -560,7 +584,7 @@ export function createKeyResolver(
 
         if (!entry) {
             chord = null;
-            useNodeStore.getState().setActiveBindings(resolveActiveBindings());
+            useFastGraphStore.getState().setActiveBindings(resolveActiveBindings());
             onKey(undefined, key.toLowerCase(), "fail");
             return;
         }
@@ -568,13 +592,13 @@ export function createKeyResolver(
         if (typeof entry.children === "function") {
             entry.children();
             chord = null;
-            useNodeStore.getState().setActiveBindings(resolveActiveBindings());
+            useFastGraphStore.getState().setActiveBindings(resolveActiveBindings());
             onKey(entry.name, key.toLowerCase(), "success");
             return;
         }
 
         chord = entry.children;
-        useNodeStore.getState().setActiveBindings(chord);
+        useFastGraphStore.getState().setActiveBindings(chord);
         onKey(entry.name, key.toLowerCase(), "pending");
     };
 }

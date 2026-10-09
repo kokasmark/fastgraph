@@ -1,8 +1,8 @@
-import { useNodeStore } from "./store";
+import { useFastGraphStore } from "./store";
 import type { Node } from "./types";
 
 export function move(dx: number, dy: number) {
-    useNodeStore.setState((state) => {
+    useFastGraphStore.setState((state) => {
         const ids = new Set<string>();
         const visited = new Set<string>();
 
@@ -14,7 +14,7 @@ export function move(dx: number, dy: number) {
             state.nodes[nodeId]?.children?.forEach(collect);
         };
 
-        useNodeStore.getState().selected.forEach(collect);
+        useFastGraphStore.getState().selected.forEach(collect);
 
         const nodes = { ...state.nodes };
         ids.forEach((nodeId) => {
@@ -35,7 +35,7 @@ export function move(dx: number, dy: number) {
 }
 
 export function scale(dx: number, dy: number) {
-    useNodeStore.getState().apply((node) => {
+    useFastGraphStore.getState().apply((node) => {
         return {
             ...node,
             meta: {
@@ -50,7 +50,7 @@ export function scale(dx: number, dy: number) {
 }
 
 export function setColor(color?:string) {
-    useNodeStore.getState().apply((node) => {
+    useFastGraphStore.getState().apply((node) => {
         return {
             ...node,
             meta: {
@@ -62,6 +62,6 @@ export function setColor(color?:string) {
 }
 
 export function addShape(node:Node){
-    const { selected, addNode } = useNodeStore.getState();
+    const { selected, addNode } = useFastGraphStore.getState();
     [...selected].forEach((parentId) => addNode(parentId, node));
 }

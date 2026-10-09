@@ -13,7 +13,10 @@ function App() {
             }}
         >
 
-            <p className="uppercase absolute text-[10px] font-black text-gray-500 top-0 right-2">fastgraph</p>
+            <div className="absolute bottom-2 right-2 flex flex-col items-end">
+                <p className="uppercase text-[10px] leading-none font-black text-gray-500">fastgraph</p>
+                <p className="uppercase text-[8px] leading-none font-black text-gray-500">{__VERSION__}</p>
+            </div>
 
             <Tree />
             <KeyBar />

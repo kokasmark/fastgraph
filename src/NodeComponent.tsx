@@ -1,5 +1,5 @@
 import { Shapes } from "./shapes";
-import { useNodeStore } from "./store";
+import { useFastGraphStore } from "./store";
 import { GraphState } from "./types";
 import type { Node } from "./types";
 
@@ -8,14 +8,15 @@ function cursorForState(state: GraphState): string {
     if (state === GraphState.Grabbed) return "grabbing";
     if (state === GraphState.Scale) return "resize";
     if (state === GraphState.Yanked) return "yanked";
+    if (state === GraphState.Multi) return "multi";
     return "pointer";
 }
 
 
 export function NodeComponent({ node, hideCursor }: { node: Node, hideCursor?: boolean }) {
-    const { selected, rootId } = useNodeStore();
+    const { selected, rootId } = useFastGraphStore();
     const isCurrent = selected.includes(node.id) && rootId !== node.id;
-    const appState = useNodeStore((s) => s.state);
+    const appState = useFastGraphStore((s) => s.state);
 
     const cursor = cursorForState(appState);
 

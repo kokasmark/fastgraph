@@ -3,14 +3,14 @@ import { GraphLayout, type Node, type Rect } from "./types";
 import { NodeComponent } from "./NodeComponent";
 import type { ElkNode } from "elkjs";
 import ElkConstructor from "elkjs";
-import { useNodeStore } from "./store";
+import { useFastGraphStore } from "./store";
 import { rectsMap } from "./navigation";
 import { encode, decode } from "./serialization";
 
 const elk = new ElkConstructor();
 
 export const getLayoutOptions = () => {
-    const layout = useNodeStore.getState().layout;
+    const layout = useFastGraphStore.getState().layout;
 
     return {
         "elk.algorithm": "layered",
@@ -41,7 +41,7 @@ export const getLayoutOptions = () => {
 };
 
 export async function layoutNodes(rootId: string): Promise<{ nodes: Node[]; graph: ElkNode }> {
-    const { findNode } = useNodeStore.getState();
+    const { findNode } = useFastGraphStore.getState();
 
     const nodes: Node[] = [];
     const edges: { id: string; source: string; target: string }[] = [];
@@ -131,10 +131,10 @@ export function Tree() {
     const [nodeRects, setNodeRects] = useState<Map<number, Rect>>(new Map());
 
     const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-    const nodes = useNodeStore((state) => state.nodes);
-    const root = useNodeStore((state) => state.rootId);
-    const loadGraph = useNodeStore((state) => state.loadGraph);
-    const graphLayoutFlags = useNodeStore((state) => state.layout);
+    const nodes = useFastGraphStore((state) => state.nodes);
+    const root = useFastGraphStore((state) => state.rootId);
+    const loadGraph = useFastGraphStore((state) => state.loadGraph);
+    const graphLayoutFlags = useFastGraphStore((state) => state.layout);
 
     const initialized = useRef(false);
 

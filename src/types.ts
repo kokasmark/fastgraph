@@ -92,6 +92,7 @@ export type NodeStore = {
     layout: GraphLayout;
     activeBindings: Bindings | null;
     undoStack: Transaction<NodeStore>[];
+    repeatFunction?: () => any;
 
     loadGraph: (graph: DeserializedGraph) => void;
 
@@ -107,4 +108,5 @@ export type NodeStore = {
     setYanked: (nodeIds?: string[]) => void;
     removeNode: (nodeId: string) => void;
     undo: () => void;
+    repeat: () => void;
 };

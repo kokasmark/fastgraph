@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import { useNodeStore } from "./store";
+import { useFastGraphStore } from "./store";
 import { Shapes } from "./shapes";
 
 export function Layers() {
-    const nodes = useNodeStore((s) => s.nodes);
-    const rootId = useNodeStore((s) => s.rootId);
-    const selected = useNodeStore((s) => s.selected);
-    const setCurrent = useNodeStore((s) => s.setCurrent);
+    const nodes = useFastGraphStore((s) => s.nodes);
+    const rootId = useFastGraphStore((s) => s.rootId);
+    const selected = useFastGraphStore((s) => s.selected);
+    const setCurrent = useFastGraphStore((s) => s.setCurrent);
 
     const levels = useMemo(() => {
         const depth: Record<string, number> = {};

@@ -1,11 +1,11 @@
 import { resolveActiveBindings } from "./bindings";
 import { labelFor } from "./KeyBar";
-import { useNodeStore } from "./store";
+import { useFastGraphStore } from "./store";
 
 const ANIMATION_DELAY = 0.025;
 
 export function Help() {
-    const bindings = useNodeStore((s) => s.activeBindings) ?? resolveActiveBindings();
+    const bindings = useFastGraphStore((s) => s.activeBindings) ?? resolveActiveBindings();
 
     return (
         <div className="fixed top-2 left-2 flex flex-col gap-2 flex-wrap h-full">

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Node, NodeStore, Transaction } from "./types";
+import type { Node, NodeStore as FastGraphStore, Transaction } from "./types";
 import { GraphLayout, GraphState } from "./types";
 import { RootNode } from "./nodes";
 
@@ -20,9 +20,9 @@ function diffState<S extends object>(before: S, after: S, ignoreKeys: Set<keyof 
 
 const rootId = crypto.randomUUID();
 
-const UNTRACKED_KEYS = new Set<keyof NodeStore>(["undoStack"]);
+const UNTRACKED_KEYS = new Set<keyof FastGraphStore>(["undoStack"]);
 
-export const useNodeStore = create<NodeStore>((set, get) => {
+export const useFastGraphStore = create<FastGraphStore>((set, get) => {
     const rawSet = set;
 
     const trackedSet: typeof set = (partial, replace) => {
@@ -46,6 +46,7 @@ export const useNodeStore = create<NodeStore>((set, get) => {
         layout: GraphLayout.Right | GraphLayout.Balanced | GraphLayout.Brandes_Koepf,
         activeBindings: null,
         undoStack: [],
+        repeatFunction: undefined,
 
         loadGraph: (graph) => {
             const nodes = Object.fromEntries(graph.nodes.map(node => [node.id, node]))
@@ -78,6 +79,7 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                         ...s.nodes,
                         [id]: updater(node),
                     },
+                    repeatFunction: () => get().updateNode(id, updater)
                 };
             });
         },
@@ -125,6 +127,7 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                     [newNode.id]: newNode,
                 },
                 selected: [newNode.id],
+                repeatFunction: () => get().addNode(parentId, child)
             }));
 
             return newNode.id
@@ -174,8 +177,8 @@ export const useNodeStore = create<NodeStore>((set, get) => {
                 const selected = remaining.length > 0
                     ? remaining
                     : [node.parents?.[0] ?? s.rootId];
-
-                return { nodes, selected };
+                
+                return { nodes, selected, repeatFunction: () => get().removeNode(nodeId) };
             });
         },
 
@@ -185,14 +188,22 @@ export const useNodeStore = create<NodeStore>((set, get) => {
             if (!transaction) return;
 
             rawSet((state) => {
-                const reverted: Partial<NodeStore> = {};
+                const reverted: Partial<FastGraphStore> = {};
                 transaction.forEach(({ key, before }) => {
                     (reverted as any)[key] = before;
                 });
                 return { ...reverted, undoStack: state.undoStack.slice(0, -1) } as any;
             });
+        },
+
+        repeat: () => {
+            const { repeatFunction } = get();
+
+            if(!repeatFunction) return;
+
+            repeatFunction();
         }
     })
 });
 
-export const apply = (updater: (node: Node) => Node) => useNodeStore.getState().apply(updater);
+export const apply = (updater: (node: Node) => Node) => useFastGraphStore.getState().apply(updater);
