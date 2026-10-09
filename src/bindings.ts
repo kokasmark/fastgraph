@@ -1,17 +1,8 @@
 import { useFastGraphStore } from "./store";
-import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState } from "./types";
+import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState, type Bindings } from "./types";
 import { BoxNode, CircleNode, CloudNode, DatabaseNode, EllipseNode, HexagonNode, NoteNode, ParallelogramNode, RombusNode, RootNode, TriangleNode, } from "./nodes";
 import { addShape, move, scale, setColor } from "./helpers";
 import { navigate } from "./navigation";
-
-type Action = () => void;
-
-type Bindings = {
-    [key: string]: {
-        name: string;
-        children: Action | Bindings;
-    };
-};
 
 function pasteNode(yankedId: string, parentId: string) {
     const { addNode, findNode } = useFastGraphStore.getState();
@@ -51,6 +42,7 @@ function pasteTree(yankedId: string, parentId: string) {
 const baseBindings: Bindings = {
     n: {
         name: "New Graph",
+        description: "Creates a new graph",
         children: {
             n: {
                 name: "Create",
@@ -63,6 +55,7 @@ const baseBindings: Bindings = {
     },
     a: {
         name: "Add",
+        description: "Creates a node under the selected node",
         children: {
             b: {
                 name: "Box",
@@ -118,6 +111,7 @@ const baseBindings: Bindings = {
     },
     x: {
         name: "Delete",
+        description: "Deletes the selected node",
         children: () => {
             const { selected, removeNode } = useFastGraphStore.getState();
             [...selected].forEach((id) => removeNode(id));
@@ -125,18 +119,22 @@ const baseBindings: Bindings = {
     },
     g: {
         name: "Grab",
+        description: "Grabs a node to be moved around",
         children: () => useFastGraphStore.getState().setState(GraphState.Grabbed),
     },
     t: {
         name: "Text",
+        description: "Enables writing text inside nodes",
         children: () => useFastGraphStore.getState().setState(GraphState.Typing),
     },
     s: {
         name: "Resize",
+        description: "Enables resizing nodes",
         children: () => useFastGraphStore.getState().setState(GraphState.Scale),
     },
     y: {
         name: "Yank",
+        description: "Copies the selected nodes so they can be pasted, joined or separated",
         children: () => {
             const { setState, setYanked, selected } = useFastGraphStore.getState();
             setYanked(selected)
@@ -145,10 +143,12 @@ const baseBindings: Bindings = {
     },
     m: {
         name: "Multi",
+        description: "Select multiple nodes",
         children: () => useFastGraphStore.getState().setState(GraphState.Multi),
     },
     d: {
         name: "Detach",
+        description: "Unlinks the selected nodes from their parents",
         children: () => {
             const { rootId, updateNode, selected, findNode, apply } = useFastGraphStore.getState();
 
@@ -219,9 +219,11 @@ const baseBindings: Bindings = {
     },
     l: {
         name: "Layout",
+        description: "Layout settings",
         children: {
             d: {
                 name: "Direction",
+                description: "Default direction of the graph",
                 children: {
                     arrowright: {
                         name: "Right",
@@ -235,6 +237,7 @@ const baseBindings: Bindings = {
             },
             a: {
                 name: "Aligment",
+                description: "Nodes relative aligment",
                 children: {
                     arrowup: {
                         name: "Up",
@@ -256,6 +259,7 @@ const baseBindings: Bindings = {
             },
             s: {
                 name: "Strategy",
+                description: "Algorithm used to position nodes",
                 children: {
                     b: {
                         name: "Brandes Koepf",
@@ -275,6 +279,7 @@ const baseBindings: Bindings = {
     },
     r: {
         name: "Repeat",
+        description: "Repeats the last action",
         children: () => {
             const { repeat } = useFastGraphStore.getState();
             repeat();
@@ -304,6 +309,13 @@ const baseBindings: Bindings = {
             }
         }
     },
+    ctrl: {
+        name: "Show help",
+        description: "Shows the descriptions of actions",
+        children: () => {
+
+        }
+    }
 };
 
 const grabbedBindings: Bindings = {
@@ -368,6 +380,7 @@ const multiBindings: Bindings = {
     },
     u: {
         name: "Unselect",
+        description: "Deselects the multi selected nodes",
         children: () => {
             const { selected, setSelected, setState } = useFastGraphStore.getState();
             setSelected([selected[selected.length - 1]]);
@@ -391,6 +404,7 @@ const yankedBindings: Bindings = {
     },
     p: {
         name: "Paste",
+        description: "Pastes yanked nodes under the selected node(s)",
         children: {
             p: {
                 name: "Without Children",
@@ -414,6 +428,7 @@ const yankedBindings: Bindings = {
     },
     x: {
         name: "Cut & Paste",
+        description: "Moves yanked nodes under the selected node(s)",
         children: {
             x: {
                 name: "Without Children",
@@ -448,6 +463,7 @@ const yankedBindings: Bindings = {
     },
     j: {
         name: "Join",
+        description: "Adds an edge from the selected node(s) to the yanked node(s)",
         children: () => {
             const { yanked, selected, updateNode } = useFastGraphStore.getState();
 
@@ -472,6 +488,7 @@ const yankedBindings: Bindings = {
     },
     s: {
         name: "Separate",
+        description: "Removes the edge between the selected node(s) and the yanked node(s)",
         children: () => {
             const { yanked, selected, updateNode, rootId } = useFastGraphStore.getState();
 

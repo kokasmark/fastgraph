@@ -74,6 +74,7 @@ export type Action = () => void;
 export type Bindings = {
     [key: string]: {
         name: string;
+        description?: string;
         children: Action | Bindings;
     };
 };
