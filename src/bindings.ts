@@ -1,8 +1,10 @@
 import { useFastGraphStore } from "./store";
-import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState, type Bindings } from "./types";
+import { GraphLayout, GraphLayoutAlignment, GraphLayoutDirection, GraphLayoutStrategy, GraphState, type Bindings, type Node } from "./types";
 import { BoxNode, CircleNode, CloudNode, DatabaseNode, EllipseNode, HexagonNode, NoteNode, ParallelogramNode, RombusNode, RootNode, TriangleNode, } from "./nodes";
-import { addShape, move, scale, setColor } from "./helpers";
+import { addShape, move, scale, setColor, walk } from "./helpers";
 import { navigate } from "./navigation";
+import { toPng } from "html-to-image";
+import { Shapes } from "./shapes";
 
 function pasteNode(yankedId: string, parentId: string) {
     const { addNode, findNode } = useFastGraphStore.getState();
@@ -298,13 +300,44 @@ const baseBindings: Bindings = {
             i: {
                 name: "Image",
                 children: () => {
+                    const element = document.getElementById("fastgraph");
 
-                }
+                    if (!element) return;
+
+                    toPng(element, { cacheBust: false })
+                        .then((dataUrl) => {
+                            const link = document.createElement("a");
+                            link.download = "graph.png";
+                            link.href = dataUrl;
+                            link.click();
+                        })
+                        .catch(console.error);
+                },
             },
             m: {
                 name: "Mermaid",
                 children: () => {
+                    const { rootId, findNode, layout } = useFastGraphStore.getState()
 
+                    const mdId = (id?: string) => id ? id.split('-').at(-1) : ''
+
+                    let nodes: string[] = []
+                    let connections: string[] = []
+
+
+                    walk(findNode(rootId), (node?: Node) => {
+                        if (node?.id === rootId) return;
+
+                        nodes.push(`${mdId(node?.id)}@{ shape: ${Shapes[node?.shape!].name} , label: "${node?.meta?.text ?? ' '}" }`)
+
+                        node?.parents?.forEach(parent => {
+                            if (parent === rootId) return
+
+                            connections.push(`${mdId(parent)} --> ${mdId(node?.id)}`)
+                        });
+                    })
+
+                    navigator.clipboard.writeText(`flowchart ${layout & GraphLayout.DDown ? "TD" : "LR"}\n${nodes.join('\n')}\n${connections.join('\n')}`)
                 }
             }
         }

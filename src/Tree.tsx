@@ -211,6 +211,7 @@ export function Tree() {
     return (
         <div
             className="relative rounded-xl p-4 w-full h-full"
+            id="fastgraph"
         >
             <svg
                 className="absolute inset-0 text-white w-full h-full"

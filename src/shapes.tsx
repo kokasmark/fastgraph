@@ -90,7 +90,7 @@ const stretch = (children: ReactNode, props: ShapeProps) => (
 );
 
 export const BoxShape: Shape = {
-    name: "box",
+    name: "rect",
     Svg: (props) => (
         <svg width="100%" height="100%" fill="currentColor" {...props}>
             <rect width="100%" height="100%" rx={RADIUS} ry={RADIUS} />
@@ -117,7 +117,7 @@ export const CircleShape: Shape = {
 };
 
 export const RombusShape: Shape = {
-    name: "rombus",
+    name: "diamond",
     Svg: polygon([[50, 0], [100, 50], [50, 100], [0, 50]]),
 };
 
@@ -137,12 +137,12 @@ export const HexagonShape: Shape = {
 };
 
 export const NoteShape: Shape = {
-    name: "note",
+    name: "notch-rect",
     Svg: polygon([[0, 0], [85, 0], [100, 25], [100, 100], [0, 100]]),
 };
 
 export const DatabaseShape: Shape = {
-    name: "database",
+    name: "cyl",
     Svg: (props) =>
         stretch(
             <>
