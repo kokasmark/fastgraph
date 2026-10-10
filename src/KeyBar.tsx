@@ -55,6 +55,9 @@ export function KeyBar() {
         });
 
         function handleKeyDown(e: KeyboardEvent) {
+            
+            if(e.ctrlKey) return;
+
             resolver(e.key);
         }
 
