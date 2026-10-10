@@ -65,15 +65,17 @@ export function addShape(node:Node){
     const { selected, addNode } = useFastGraphStore.getState();
     [...selected].forEach((parentId) => addNode(parentId, node));
 }
-export function walk(node: Node | undefined, walkF: (node?: Node) => void
-) {
+export function walk(node: Node | undefined, walkF: (node?: Node) => void, seen: string[]) {
     if (!node) return;
 
     const { findNode } = useFastGraphStore.getState();
 
     walkF(node);
 
+    seen.push(node.id)
+
     node.children?.forEach(child => {
-        walk(findNode(child), walkF);
+        if(!seen.includes(child))
+            walk(findNode(child), walkF, seen);
     });
 }

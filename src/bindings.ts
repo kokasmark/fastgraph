@@ -335,7 +335,7 @@ const baseBindings: Bindings = {
 
                             connections.push(`${mdId(parent)} --> ${mdId(node?.id)}`)
                         });
-                    })
+                    }, [rootId])
 
                     navigator.clipboard.writeText(`flowchart ${layout & GraphLayout.DDown ? "TD" : "LR"}\n${nodes.join('\n')}\n${connections.join('\n')}`)
                 }
